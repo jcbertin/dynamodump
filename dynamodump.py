@@ -357,7 +357,7 @@ def get_restore_table_matches(table_name_wildcard, separator):
     try:
         dir_list = [dir_name for dir_name in os.listdir(args.dumpPath) if os.path.isdir(args.dumpPath + "/" + dir_name)]
     except OSError:
-        logging.info("Cannot find \"./%s\", Now trying current working directory.."
+        logging.info("Cannot find \"./%s\", Now trying current working directory..."
                      % args.dumpPath)
         dump_data_path = CURRENT_WORKING_DIR
         try:
@@ -403,20 +403,21 @@ def delete_table(dynamo, sleep_interval, table_name):
             table_exists = True
             try:
                 dynamo.delete_table(TableName=table_name)
+                logging.info(table_name + " deleting...")
             except botocore.exceptions.ClientError as e:
                 if e.response['Error']['Code'] == "ResourceNotFoundException":
                     table_exists = False
-                    logging.info(table_name + " not found for delation!")
+                    logging.info(table_name + " not found for deletion!")
                     break
                 elif e.response['Error']['Code'] == "LimitExceededException":
-                    logging.info("Limit exceeded, retrying deletion of " + table_name + "..")
+                    logging.info("Limit exceeded, retrying deletion of " + table_name + "...")
                     time.sleep(sleep_interval)
                 elif e.response['Error']['Code'] == "ThrottlingException":
                     logging.info("Control plane limit exceeded, retrying deletion of " +
-                                 table_name + "..")
+                                 table_name + "...")
                     time.sleep(sleep_interval)
                 elif e.response['Error']['Code'] == "ResourceInUseException":
-                    logging.info(table_name + " table is being deleted..")
+                    logging.info(table_name + " table is being deleted...")
                     time.sleep(sleep_interval)
                 else:
                     logging.exception(e)
@@ -426,7 +427,7 @@ def delete_table(dynamo, sleep_interval, table_name):
         if table_exists:
             try:
                 while True:
-                    logging.info("Waiting for " + table_name + " table to be deleted.. [" +
+                    logging.info("Waiting for " + table_name + " table to be deleted... [" +
                                  dynamo.describe_table(TableName=table_name)["Table"]["TableStatus"] + "]")
                     time.sleep(sleep_interval)
             except botocore.exceptions.ClientError as e:
@@ -468,7 +469,7 @@ def batch_write(dynamo, sleep_interval, table_name, put_requests):
             break
         if len(unprocessed_items) > 0 and i <= MAX_RETRY:
             logging.debug(str(len(unprocessed_items)) +
-                          " unprocessed items, retrying after %s seconds.. [%s/%s]"
+                          " unprocessed items, retrying after %s seconds... [%s/%s]"
                           % (str(sleep), str(i), str(MAX_RETRY)))
             request_items = unprocessed_items
             time.sleep(sleep)
@@ -477,7 +478,7 @@ def batch_write(dynamo, sleep_interval, table_name, put_requests):
         else:
             logging.info("Max retries reached, failed to processed batch write: " +
                          json.dumps(unprocessed_items, indent=JSON_INDENT))
-            logging.info("Ignoring and continuing..")
+            logging.info("Ignoring and continuing...")
             break
 
 
@@ -488,7 +489,7 @@ def wait_for_active_table(dynamo, table_name, verb=""):
 
     while True:
         if dynamo.describe_table(TableName=table_name)["Table"]["TableStatus"] != "ACTIVE":
-            logging.info("Waiting for " + table_name + " table to be " + verb + ".. [" +
+            logging.info("Waiting for " + table_name + " table to be " + verb + "... [" +
                          dynamo.describe_table(TableName=table_name)["Table"]["TableStatus"] + "]")
             time.sleep(sleep_interval)
         else:
@@ -515,11 +516,11 @@ def update_provisioned_throughput(dynamo, table_name, read_capacity, write_capac
             break
         except botocore.exceptions.ClientError as e:
             if e.response['Error']['Code'] == "LimitExceededException":
-                logging.info("Limit exceeded, retrying updating throughput of " + table_name + "..")
+                logging.info("Limit exceeded, retrying updating throughput of " + table_name + "...")
                 time.sleep(sleep_interval)
             elif e.response['Error']['Code'] == "ThrottlingException":
                 logging.info("Control plane limit exceeded, retrying updating throughput"
-                             "of " + table_name + "..")
+                             "of " + table_name + "...")
                 time.sleep(sleep_interval)
 
     # wait for provisioned throughput update completion
@@ -532,7 +533,7 @@ def do_empty(dynamo, table_name):
     Empty table named table_name
     """
 
-    logging.info("Starting Empty for " + table_name + "..")
+    logging.info("Starting Empty for " + table_name + "...")
 
     # get table schema
     logging.info("Fetching table schema for " + table_name)
@@ -563,11 +564,11 @@ def do_empty(dynamo, table_name):
             break
         except botocore.exceptions.ClientError as e:
             if e.response['Error']['Code'] == "LimitExceededException":
-                logging.info("Limit exceeded, retrying creation of " + table_name + "..")
+                logging.info("Limit exceeded, retrying creation of " + table_name + "...")
                 time.sleep(sleep_interval)
             elif e.response['Error']['Code'] == "ThrottlingException":
                 logging.info("Control plane limit exceeded, retrying creation of " +
-                             table_name + "..")
+                             table_name + "...")
                 time.sleep(sleep_interval)
             else:
                 logging.exception(e)
@@ -581,7 +582,7 @@ def do_empty(dynamo, table_name):
 
 
 def do_backup(dynamo, table_name, read_capacity, bucket=None):
-    logging.info("Starting backup for " + table_name + "..")
+    logging.info("Starting backup for " + table_name + "...")
 
     # trash data, re-create subdir
     if os.path.exists(args.dumpPath + os.sep + table_name):
@@ -655,14 +656,14 @@ def do_restore(dynamo, sleep_interval, source_table, destination_table, write_ca
     """
     Restore table
     """
-    logging.info("Starting restore for " + source_table + " to " + destination_table + "..")
+    logging.info("Starting restore for " + source_table + " to " + destination_table + "...")
 
     # create table using schema
     # restore source_table from dump directory if it exists else try current working directory
     if os.path.exists("%s/%s" % (args.dumpPath, source_table)):
         dump_data_path = args.dumpPath
     else:
-        logging.info("Cannot find \"./%s/%s\", Now trying current working directory.."
+        logging.info("Cannot find \"./%s/%s\", Now trying current working directory..."
                      % (args.dumpPath, source_table))
         if os.path.exists("%s/%s" % (CURRENT_WORKING_DIR, source_table)):
             dump_data_path = CURRENT_WORKING_DIR
@@ -716,11 +717,11 @@ def do_restore(dynamo, sleep_interval, source_table, destination_table, write_ca
                 break
             except botocore.exceptions.ClientError as e:
                 if e.response['Error']['Code'] == "LimitExceededException":
-                    logging.info("Limit exceeded, retrying creation of " + destination_table + "..")
+                    logging.info("Limit exceeded, retrying creation of " + destination_table + "...")
                     time.sleep(sleep_interval)
                 elif e.response['Error']['Code'] == "ThrottlingException":
                     logging.info("Control plane limit exceeded, "
-                                 "retrying creation of " + destination_table + "..")
+                                 "retrying creation of " + destination_table + "...")
                     time.sleep(sleep_interval)
                 else:
                     logging.exception(e)
@@ -739,7 +740,7 @@ def do_restore(dynamo, sleep_interval, source_table, destination_table, write_ca
 
     if not args.schemaOnly:
         # read data files
-        logging.info("Restoring data for " + destination_table + " table..")
+        logging.info("Restoring data for " + destination_table + " table...")
         data_file_list = os.listdir(dump_data_path + os.sep + source_table +
                                     os.sep + DATA_DIR + os.sep)
         data_file_list.sort()
@@ -762,7 +763,7 @@ def do_restore(dynamo, sleep_interval, source_table, destination_table, write_ca
                 # flush every MAX_BATCH_WRITE
                 if len(put_requests) == MAX_BATCH_WRITE:
                     logging.debug("Writing next " + str(MAX_BATCH_WRITE) +
-                                  " items to " + destination_table + "..")
+                                  " items to " + destination_table + "...")
                     batch_write(dynamo, BATCH_WRITE_SLEEP_INTERVAL, destination_table, put_requests)
                     del put_requests[:]
 
@@ -799,7 +800,7 @@ def do_restore(dynamo, sleep_interval, source_table, destination_table, write_ca
                         })
 
                 logging.info("Updating " + destination_table +
-                             " global secondary indexes write capacities as necessary..")
+                             " global secondary indexes write capacities as necessary...")
                 while True:
                     try:
                         dynamo.update_table(TableName=destination_table,
@@ -809,12 +810,12 @@ def do_restore(dynamo, sleep_interval, source_table, destination_table, write_ca
                         if (e.response['Error']['Code'] == "LimitExceededException"):
                             logging.info(
                                 "Limit exceeded, retrying updating throughput of"
-                                "GlobalSecondaryIndexes in " + destination_table + "..")
+                                "GlobalSecondaryIndexes in " + destination_table + "...")
                             time.sleep(sleep_interval)
                         elif (e.response['Error']['Code'] == "ThrottlingException"):
                             logging.info(
                                 "Control plane limit exceeded, retrying updating throughput of"
-                                "GlobalSecondaryIndexes in " + destination_table + "..")
+                                "GlobalSecondaryIndexes in " + destination_table + "...")
                             time.sleep(sleep_interval)
 
         # wait for table to become active
@@ -936,11 +937,11 @@ def main():
     start_time = datetime.datetime.now().replace(microsecond=0)
     if args.mode == "backup":
         if not args.srcTable:
-            logging.info("No source table specified. Specify a table or list of tables to backup ....")
+            logging.info("No source table specified. Specify a table or list of tables to backup...")
             sys.exit(1)
         matching_backup_tables = get_table_name_matches(dynamo, args.srcTable, prefix_separator)
         if not matching_backup_tables:
-            logging.info("No table found, exiting backup ....")
+            logging.info("No table found, exiting backup...")
             sys.exit(1)
         elif len(matching_backup_tables) > 1:
             logging.info("Found " + str(len(matching_backup_tables)) + " table(s) in DynamoDB to backup: " + ", ".join(matching_backup_tables))
@@ -963,7 +964,7 @@ def main():
             args.destTable = args.srcTable
 
         if not args.srcTable:
-            logging.info("No source table specified. Specify a table or list of tables to restore ....")
+            logging.info("No source table specified. Specify a table or list of tables to restore...")
             sys.exit(1)
 
         matching_restore_tables = get_restore_table_matches(args.srcTable, prefix_separator)
@@ -973,7 +974,7 @@ def main():
             matching_destination_tables = get_table_name_matches(dynamo, args.destTable, prefix_separator)
 
         if not matching_destination_tables:
-            logging.info("No table destination table found for delettion, Going to restore ....")
+            logging.info("No table destination table found for deletion, Going to restore...")
         elif len(matching_destination_tables) > 1:
             delete_str = ": " if args.dataOnly else " to be deleted: "
             logging.info(
@@ -994,7 +995,7 @@ def main():
             delete_table(dynamo, sleep_interval, matching_destination_tables[0])
 
         if not matching_restore_tables:
-            logging.info("No table found for restore, exiting restore ....")
+            logging.info("No table found for restore, exiting restore...")
             sys.exit(1)
         elif len(matching_restore_tables) > 1:
             logging.info(
@@ -1027,7 +1028,7 @@ def main():
     elif args.mode == "empty":
         matching_tables = get_table_name_matches(dynamo, args.srcTable, prefix_separator)
         if not matching_tables:
-            logging.info("No table found, exiting emptying process ....")
+            logging.info("No table found, exiting emptying process...")
             sys.exit(1)
         elif len(matching_tables) > 1:
             logging.info("Found " + str(len(matching_tables)) +
