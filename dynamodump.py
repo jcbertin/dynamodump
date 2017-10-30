@@ -599,9 +599,9 @@ def do_backup(dynamo, table_name, read_capacity, bucket=None):
         i = 0
         for index in table_desc['Table']['GlobalSecondaryIndexes']:
             if isinstance(index.get('ProvisionedThroughput', {}).get('LastDecreaseDateTime', None), datetime.datetime):
-                table_desc['Table']['GlobalSecondaryIndexes'][i]['ProvisionedThroughput']['LastDecreaseDateTime'] = time.mktinme(table_desc['Table']['GlobalSecondaryIndexes'][i]['ProvisionedThroughput']['LastDecreaseDateTime'].timetuple())
+                table_desc['Table']['GlobalSecondaryIndexes'][i]['ProvisionedThroughput']['LastDecreaseDateTime'] = time.mktime(table_desc['Table']['GlobalSecondaryIndexes'][i]['ProvisionedThroughput']['LastDecreaseDateTime'].timetuple())
             if isinstance(index.get('ProvisionedThroughput', {}).get('LastIncreaseDateTime', None), datetime.datetime):
-                table_desc['Table']['GlobalSecondaryIndexes'][i]['ProvisionedThroughput']['LastIncreaseDateTime'] = time.mktinme(table_desc['Table']['GlobalSecondaryIndexes'][i]['ProvisionedThroughput']['"LastIncreaseDateTime'].timetuple())
+                table_desc['Table']['GlobalSecondaryIndexes'][i]['ProvisionedThroughput']['LastIncreaseDateTime'] = time.mktime(table_desc['Table']['GlobalSecondaryIndexes'][i]['ProvisionedThroughput']['LastIncreaseDateTime'].timetuple())
             i += 1
     if isinstance(table_desc.get('Table', {}).get('ProvisionedThroughput', {}).get('LastDecreaseDateTime', None), datetime.datetime):
         table_desc['Table']['ProvisionedThroughput']['LastDecreaseDateTime'] = time.mktime(table_desc['Table']['ProvisionedThroughput']['LastDecreaseDateTime'].timetuple())
@@ -634,7 +634,7 @@ def do_backup(dynamo, table_name, read_capacity, bucket=None):
             i += 1
             try:
                 last_evaluated_key = scanned_table["LastEvaluatedKey"]
-                scanned_table = dynamo.scan(TableName=table_name, ExclusiveStartKe=last_evaluated_key)
+                scanned_table = dynamo.scan(TableName=table_name, ExclusiveStartKey=last_evaluated_key)
             except KeyError:
                 break
 
